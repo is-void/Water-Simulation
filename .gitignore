@@ -39,3 +39,10 @@
 
 # debug information files
 *.dwo
+*/Debug
+*/x64
+
+# Visual Studio files
+*.sln
+*.vs
+*/WaterWorld
