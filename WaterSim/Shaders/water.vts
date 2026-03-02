@@ -1,0 +1,59 @@
+#version 330 core
+float PI = 3.141592653589;
+
+layout (location = 0) in vec3 aPos;
+
+float calculateHeight();
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+uniform float Time;
+out float waterSpeed;
+
+struct Splash {
+	float xPos;
+	float zPos;
+	float time;
+	float padding;
+};
+
+layout (std140) uniform SplashData {
+	Splash splashes[5];
+};
+
+
+void main()
+{
+	gl_Position =  projection * view * model * vec4(aPos.x, -aPos.y + calculateHeight(), aPos.z, 1.0);
+}
+
+float calculateHeight()
+{
+	float dis = 0;
+	float a = 4;
+	float maxDist = 4;
+	waterSpeed = 0;
+	for(int i = 0; i < 5; i++)
+	{
+		if(splashes[i].time != 0)
+		{
+			float timeDiff = Time - splashes[i].time;
+			float dist = distance(aPos, vec3(splashes[i].xPos, aPos.y, splashes[i].zPos));
+
+			if(dist > maxDist)
+				continue;
+
+			float d = 8.0 * dist;
+			dis = max(((maxDist - dist)/maxDist) * ((0.5 + cos(clamp(d-a*timeDiff, -PI, PI))/2)), dis);
+
+		}
+		
+	}
+
+	dis = max( 0.5 * pow(sin(Time + aPos.x) *  cos(Time + aPos.z),2), dis);
+
+	return dis;
+}
+
+
