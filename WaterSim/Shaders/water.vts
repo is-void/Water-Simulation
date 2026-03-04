@@ -1,5 +1,6 @@
-#version 330 core
+#version 460 core
 float PI = 3.141592653589;
+float speed = 3f;
 
 layout (location = 0) in vec3 aPos;
 
@@ -15,7 +16,7 @@ struct Splash {
 	float xPos;
 	float zPos;
 	float time;
-	float padding;
+	float startingRadius;
 };
 
 layout (std140) uniform SplashData {
@@ -38,14 +39,15 @@ float calculateHeight()
 	{
 		if(splashes[i].time != 0)
 		{
-			float timeDiff = Time - splashes[i].time;
 			float dist = distance(aPos, vec3(splashes[i].xPos, aPos.y, splashes[i].zPos));
 
-			if(dist > maxDist)
+			if(dist > maxDist + splashes[i].startingRadius )
 				continue;
+			
+			float timeDiff = (Time - splashes[i].time) * speed;
 
 			float d = 8.0 * dist;
-			dis = max(((maxDist - dist)/maxDist) * ((0.5 + cos(clamp(d-a*timeDiff, -PI, PI))/2)), dis);
+			dis = max(((maxDist - dist)/maxDist) * ((0.5 + cos(clamp(d-a*timeDiff - splashes[i].startingRadius, -PI, PI))/2)), dis);
 
 		}
 		

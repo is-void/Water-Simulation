@@ -7,6 +7,7 @@
 *.o
 *.obj
 
+
 # Precompiled Headers
 *.gch
 *.pch
@@ -46,3 +47,7 @@
 *.sln
 *.vs
 */WaterWorld
+
+#Glad
+*.c
+/WaterSim/glad.c

@@ -13,6 +13,8 @@
 
 
 
+
+
 void sendSplashData(int uboSplashes);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
@@ -45,13 +47,14 @@ struct Splash {
 	float xPos;
 	float zPos;
 	float time;
-	float padding = 0;
-	Splash() : time(0), xPos(0), zPos(0) {}
-	Splash(float x, float z, float t)
+	float startingRadius;
+	Splash() : time(0), xPos(0), zPos(0), startingRadius(0) {}
+	Splash(float x, float z, float t, float strRad)
 	{
 		xPos = x;
 		zPos = z;
 		time = t;
+		startingRadius = strRad;
 	}
 };
 CircularBuffer<Splash> waterSources(MAX_WATER_SPLASHES);
@@ -59,8 +62,8 @@ CircularBuffer<Splash> waterSources(MAX_WATER_SPLASHES);
 int main()
 {
 	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 
@@ -85,7 +88,8 @@ int main()
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 
-	SurfaceWater waterObj = SurfaceWater(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(15.0f, 15.0f), 20);
+	SurfaceWater waterObj = SurfaceWater(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(100.0f, 100.0f), 20);
+	const int rez = 20; // This should match the 'detail' argument passed to SurfaceWater
 
 
 
@@ -113,7 +117,6 @@ int main()
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO2);
 
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * waterObj.indexCount, waterObj.triangles, GL_STATIC_DRAW);
 
 	glGenBuffers(1, &VBO2);
 
@@ -147,7 +150,9 @@ int main()
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+	glFrontFace(GL_CW);
 
 
 
@@ -188,10 +193,8 @@ int main()
 		
 
 		//Water
-		glm::mat4 waterModel = glm::translate(glm::mat4(1.0f), waterObj.transform->position);
-		waterObj.shader->setMat4("model", waterModel);
-		glDrawElements(GL_TRIANGLES, waterObj.indexCount, GL_UNSIGNED_INT, 0);
-		
+		waterObj.shader->setMat4("model", waterObj.transform->GetModelMatrix());
+		glDrawArrays(GL_PATCHES, 0, 4 * waterObj.vertexCount);
 
 
 
@@ -282,7 +285,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 
 void pushWaterSource(glm::vec3 location)
 {
-	waterSources.push(Splash(location.x, location.z, (float)glfwGetTime()));
+	waterSources.push(Splash(location.x, location.z, (float)glfwGetTime(), 1.0f));
 	std::cout << "added" << std::endl;
 
 }
