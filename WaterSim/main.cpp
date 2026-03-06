@@ -87,45 +87,41 @@ int main()
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-
-	SurfaceWater waterObj = SurfaceWater(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(100.0f, 100.0f), 20);
-	const int rez = 20; // This should match the 'detail' argument passed to SurfaceWater
+	SurfaceWater waterObj = SurfaceWater(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(50, 50), 5);
 
 
 
-
-	const char* waterVertShaderSource = "./Shaders/water.vts";
-	const char* waterFragShaderSource = "./Shaders/water.fgs";
+	
 
 
 
 
 
-	unsigned int VAO2;
-	unsigned int VBO2;
-	unsigned int EBO2;
+
+	unsigned int VAO;
+	unsigned int VBO;
+	unsigned int EBO;
 	
 
 	//Water
 
 	
-	glGenVertexArrays(1, &VAO2);
-	glBindVertexArray(VAO2);
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
 
 
-	glGenBuffers(1, &EBO2);
+	glGenBuffers(1, &EBO);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO2);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, waterObj.indices.size() * sizeof(unsigned int), waterObj.indices.data(), GL_STATIC_DRAW);
 
+	glGenBuffers(1, &VBO);
 
-	glGenBuffers(1, &VBO2);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO2);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * waterObj.vertexCount * 3, waterObj.GenerateVerticies(), GL_DYNAMIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(0));
 	glEnableVertexAttribArray(0);
-
 
 	glBindVertexArray(0);
 
@@ -144,16 +140,18 @@ int main()
 	unsigned int waterModelMatrixLoc = glGetUniformLocation(waterObj.shader->ID, "model");
 	unsigned int waterViewMatrixLoc = glGetUniformLocation(waterObj.shader->ID, "view");
 	unsigned int waterProjectionMatrixLoc = glGetUniformLocation(waterObj.shader->ID, "projection");
+	
 
 	glEnable(GL_DEPTH_TEST);
 
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
-	glFrontFace(GL_CW);
+	//glEnable(GL_CULL_FACE);
+	//glCullFace(GL_BACK);
+	//glFrontFace(GL_CW);
 
+	glPatchParameteri(GL_PATCH_VERTICES, 4);
 
 
 	while (!glfwWindowShouldClose(window))
@@ -189,12 +187,12 @@ int main()
 		waterObj.shader->use();
 		glUniformMatrix4fv(waterViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(waterProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(projection));
-		glBindVertexArray(VAO2);
+		glBindVertexArray(VAO);
 		
 
 		//Water
 		waterObj.shader->setMat4("model", waterObj.transform->GetModelMatrix());
-		glDrawArrays(GL_PATCHES, 0, 4 * waterObj.vertexCount);
+		glDrawElements(GL_PATCHES, waterObj.indices.size(), GL_UNSIGNED_INT, 0);
 
 
 

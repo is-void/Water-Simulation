@@ -1,0 +1,84 @@
+#version 460 core
+
+
+float PI = 3.141592653589;
+float speed = 3.0;
+vec4 pos;
+
+layout (quads, fractional_odd_spacing, ccw) in;
+
+void calculatePatchPos();
+float calculateHeight();
+
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+uniform float Time;
+out float waterSpeed;
+
+struct Splash {
+	float xPos;
+	float zPos;
+	float time;
+	float startingRadius;
+};
+
+layout (std140) uniform SplashData {
+	Splash splashes[5];
+};
+
+
+void main()
+{
+	calculatePatchPos();
+
+	gl_Position =  projection * view * model * vec4(pos.x, pos.y + calculateHeight(), pos.z, 1.0);
+}
+
+float calculateHeight()
+{
+	float dis = 0;
+	float a = 4;
+	float maxDist = 4;
+	waterSpeed = 0;
+	for(int i = 0; i < 5; i++)
+	{
+		if(splashes[i].time != 0)
+		{
+			float dist = distance(pos.xyz, vec3(splashes[i].xPos, pos.y, splashes[i].zPos));
+
+			if(dist > maxDist + splashes[i].startingRadius )
+				continue;
+			
+			float timeDiff = (Time - splashes[i].time) * speed;
+
+			float d = 8.0 * dist;
+			dis = max(((maxDist - dist)/maxDist) * ((0.5 + cos(clamp(d-a*timeDiff - splashes[i].startingRadius, -PI, PI))/2)), dis);
+
+		}
+		
+	}
+
+	dis = max( 0.5 * pow(sin(Time + pos.x) *  cos(Time + pos.z),2), dis);
+
+	return dis;
+}
+
+void calculatePatchPos()
+{
+	float u = gl_TessCoord.x;
+	float v = gl_TessCoord.y;
+
+	vec4 p00 = gl_in[0].gl_Position;
+	vec4 p01 = gl_in[1].gl_Position;
+	vec4 p10 = gl_in[2].gl_Position;
+	vec4 p11 = gl_in[3].gl_Position;
+
+	vec4 p0 = (p01 - p00) * u + p00;
+    vec4 p1 = (p11 - p10) * u + p10;
+    vec4 p = (p1 - p0) * v + p0;
+
+	pos = p;
+
+}

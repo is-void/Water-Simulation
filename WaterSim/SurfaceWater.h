@@ -17,7 +17,9 @@ class SurfaceWater : public Object
 	public:
 		unsigned int vertexCount;
 		std::vector<Point> points;
-		float* verticies;
+		float* vertices;
+		std::vector<unsigned int> indices;
+
 		SurfaceWater(glm::vec3 position, glm::vec<2, int> dimensions, int detail);
 		float* GenerateVerticies();
 

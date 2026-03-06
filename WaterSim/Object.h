@@ -9,5 +9,6 @@ class Object
 		Shader* shader;
 		Transform* transform;
 		Object(glm::vec3 position, const char* vertSource, const char* fragSource);
+		Object(glm::vec3 position, const char* vertSource, const char* fragSource, const char* tcsSource, const char* tesSource);
 
 };
