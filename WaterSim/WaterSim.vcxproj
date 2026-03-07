@@ -159,6 +159,9 @@
     <None Include="..\..\..\OpenGLPractice1\OpenGLPractice1\Shaders\shader.fgs" />
     <None Include="..\..\..\OpenGLPractice1\OpenGLPractice1\Shaders\shader.vts" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\..\..\Downloads\09_1.png" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
