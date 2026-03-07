@@ -2,7 +2,7 @@
 
 
 float PI = 3.141592653589;
-float amplitude = 0.1;
+float amplitude = 0.2;
 float speed = 0.5;
 vec4 pos;
 
@@ -57,7 +57,7 @@ float calculateHeight()
 			float timeDiff = (Time - splashes[i].time) * speed * 4;
 
 			float d = 8.0 * dist;
-			dis = max(((maxDist - dist)/maxDist) * splashHeight *  cos(clamp(d-a*timeDiff - splashes[i].startingRadius, -PI, PI)), 0);
+			dis += max(((maxDist - dist)/maxDist) * splashHeight *  cos(clamp(d-a*timeDiff - splashes[i].startingRadius, -PI, PI)), 0);
 
 		}
 		
@@ -85,13 +85,13 @@ void calculatePatchPos()
 }
 float getWaterHeightFromTexture()
 {
+
 	float u = pos.x + Time;
 	float v = pos.z + Time;
 
-	float h1 = texture2D(waterMap, vec2(u, v)).r * sin(Time-0.2);
-	float h2 = texture2D(waterMap, vec2(-v, -u)).r * cos(Time+0.5);
+	float swell = texture2D(waterMap, vec2(u * sin(Time/10f), (v - 1.5) * sin(0.5 + Time/10f))).r;
+	float heave = texture2D(waterMap, vec2(-v, -u)).r ;
 
-	return (h1+h2)/2;
-
+	return (swell+heave)/2;
 
 }
