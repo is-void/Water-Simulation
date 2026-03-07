@@ -43,26 +43,25 @@ float calculateHeight()
 {
 	float dis = 0;
 	float a = 4;  
-	float maxDist = 10;
+	float splashHeight = 0.25;
+	float maxDist = 3;
 	for(int i = 0; i < 5; i++)
 	{
 		if(splashes[i].time != 0)
 		{
 			float dist = distance(pos.xyz, vec3(splashes[i].xPos, pos.y, splashes[i].zPos));
 
-			if(dist > maxDist + splashes[i].startingRadius )
+			if(dist > maxDist)
 				continue;
 			
 			float timeDiff = (Time - splashes[i].time) * speed * 4;
 
 			float d = 8.0 * dist;
-			dis = max(((maxDist - dist)/maxDist) * ((0.5 + cos(clamp(d-a*timeDiff - splashes[i].startingRadius, -PI, PI))/2)), dis);
+			dis = max(((maxDist - dist)/maxDist) * splashHeight *  cos(clamp(d-a*timeDiff - splashes[i].startingRadius, -PI, PI)), 0);
 
 		}
 		
 	}
-
-	
 
 	return dis;
 }
@@ -89,8 +88,8 @@ float getWaterHeightFromTexture()
 	float u = pos.x + Time;
 	float v = pos.z + Time;
 
-	float h1 = texture2D(waterMap, vec2(u, v)).r;
-	float h2 = texture2D(waterMap, vec2(v * u, u-10.0)).r;
+	float h1 = texture2D(waterMap, vec2(u, v)).r * sin(Time-0.2);
+	float h2 = texture2D(waterMap, vec2(-v, -u)).r * cos(Time+0.5);
 
 	return (h1+h2)/2;
 
