@@ -25,6 +25,10 @@ struct Splash {
 	float zPos;
 	float time;
 	float startingRadius;
+	float height;
+	float speed;
+	float dirX;
+	float dirZ;
 };
 
 layout (std140) uniform SplashData {

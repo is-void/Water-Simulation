@@ -48,17 +48,26 @@ struct Splash {
 	float zPos;
 	float time;
 	float startingRadius;
-	Splash() : time(0), xPos(0), zPos(0), startingRadius(0) {}
-	Splash(float x, float z, float t, float strRad)
+	float height;
+	float speed;
+	float dirX;
+	float dirZ;
+
+	Splash() : time((float)glfwGetTime()), xPos(0), zPos(0), startingRadius(0), height(1), speed(0), dirX(0), dirZ(0) {}
+	Splash(float x, float z, float t, float strRad, float h, float s, float dx, float dz)
 	{
 		xPos = x;
 		zPos = z;
 		time = t;
 		startingRadius = strRad;
+		height = h;
+		speed = s;
+		dirX = dx;
+		dirZ = dz;
 	}
 };
-CircularBuffer<Splash> waterSources(MAX_WATER_SPLASHES);
 
+CircularBuffer<Splash> waterSources(MAX_WATER_SPLASHES);
 int main()
 {
 	glfwInit();
@@ -163,6 +172,7 @@ int main()
 
 	unsigned int splashUBO;
 	glGenBuffers(1, &splashUBO);
+
 	glBindBuffer(GL_UNIFORM_BUFFER, splashUBO);
 	glBufferData(GL_UNIFORM_BUFFER, 5 * sizeof(Splash), NULL, GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -321,7 +331,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 
 void pushWaterSource(glm::vec3 location)
 {
-	waterSources.push(Splash(location.x, location.z, (float)glfwGetTime(), 1.0f));
+	waterSources.push(Splash(location.x, location.z, (float)glfwGetTime(), 1.0f, 1.0f, 1.0f, 0.0f, 0.0f));
 	std::cout << "added" << std::endl;
 
 }
