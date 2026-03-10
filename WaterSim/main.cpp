@@ -96,7 +96,7 @@ int main()
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-	SurfaceWater waterObj = SurfaceWater(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(50, 50), 5);
+	SurfaceWater waterObj = SurfaceWater(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(50, 50), 1);
 
 
 
@@ -194,9 +194,9 @@ int main()
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//glEnable(GL_CULL_FACE);
-	//glCullFace(GL_BACK);
-	//glFrontFace(GL_CW);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glFrontFace(GL_CCW);
 
 	glPatchParameteri(GL_PATCH_VERTICES, 4);
 	
@@ -239,9 +239,10 @@ int main()
 		
 
 		//Water
+		
 		waterObj.shader->setMat4("model", waterObj.transform->GetModelMatrix());
+		waterObj.shader->SetVec3("camPos", camera.Position);
 		glDrawElements(GL_PATCHES, waterObj.indices.size(), GL_UNSIGNED_INT, 0);
-
 
 
 		//check and call events, swap buffers

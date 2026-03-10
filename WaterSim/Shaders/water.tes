@@ -7,6 +7,7 @@ float speed = 0.5;
 vec4 pos;
 
 layout (quads, fractional_odd_spacing, ccw) in;
+out vec3 FragPos;
 
 void calculatePatchPos();
 float calculateHeight();
@@ -39,8 +40,8 @@ layout (std140) uniform SplashData {
 void main()
 {
 	calculatePatchPos();
-
-	gl_Position =  projection * view * model * vec4(pos.x, pos.y + calculateHeight() +  amplitude * getWaterHeightFromTexture(), pos.z, 1.0);
+	mat4 ClipSpace = projection * view * model;
+	gl_Position =  ClipSpace * vec4(pos.x, pos.y + calculateHeight() +  amplitude * getWaterHeightFromTexture(), pos.z, 1.0);
 }
 
 float calculateHeight()
@@ -80,22 +81,22 @@ void calculatePatchPos()
 	vec4 p10 = gl_in[2].gl_Position;
 	vec4 p11 = gl_in[3].gl_Position;
 
+
 	vec4 p0 = (p01 - p00) * u + p00;
     vec4 p1 = (p11 - p10) * u + p10;
     vec4 p = (p1 - p0) * v + p0;
 
 	pos = p;
+	FragPos = (model * pos).xyz;
 
 }
 float getWaterHeightFromTexture()
 {
+    float u = pos.x + Time;
+    float v = pos.z + Time;
 
-	float u = pos.x + Time;
-	float v = pos.z + Time;
+    float swell = texture(waterMap, vec2(u * sin(Time / 10.0), (v - 1.5) * sin(0.5 + Time / 10.0))).r;
+    float heave = texture(waterMap, vec2(-v, -u)).r;
 
-	float swell = texture2D(waterMap, vec2(u * sin(Time/10f), (v - 1.5) * sin(0.5 + Time/10f))).r;
-	float heave = texture2D(waterMap, vec2(-v, -u)).r ;
-
-	return (swell+heave)/2;
-
+    return (swell + heave) * 0.5;
 }

@@ -1,9 +1,26 @@
 #version 460 core
 
+in vec3 FragPos;
 
 out vec4 FragColor;
 
+uniform vec3 camPos;
+
 void main()
 {
-	FragColor = vec4(1.0, 1.0f, 1.0f, 0.8f);
+    vec3 dx = dFdx(FragPos);
+    vec3 dy = dFdy(FragPos);
+    vec3 normal = normalize(cross(dx, dy));
+
+    vec3 viewDir = normalize(camPos - FragPos);
+
+    float r0 = 0.02;
+    float dot = clamp(dot(viewDir, normal), 0.0, 1.0);
+   
+
+    float reflect = r0 + (1  - r0) * pow(1 - dot, 5);
+
+    float transparency = clamp(reflect, 0.2, 0.9);
+    
+	FragColor = vec4(1.0, 1.0f, 1.0f, transparency);
 }
