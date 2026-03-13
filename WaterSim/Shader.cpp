@@ -175,11 +175,11 @@ void Shader::setFloat(const std::string& name, float value) const
     glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
 }
 
-void Shader::SetVec3(const std::string& name, glm::vec3 value)
+void Shader::setVec3(const std::string& name, glm::vec3 value) const
 {
     glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, glm::value_ptr(value));
 }
-void Shader::SetVec4(const std::string& name, glm::vec4 value)
+void Shader::setVec4(const std::string& name, glm::vec4 value) const
 {
     glUniform4fv(glGetUniformLocation(ID, name.c_str()), 1, glm::value_ptr(value));
 }
@@ -187,6 +187,16 @@ void Shader::SetVec4(const std::string& name, glm::vec4 value)
 void Shader::setMat4(const std::string& name, glm::mat4 value) const
 {
     glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
+
+}
+
+void Shader::setMaterial(const std::string& name, Material material) const
+{
+    setVec3("material.ambient", material.ambient);
+	setVec3("material.diffuse", material.diffuse);
+	setVec3("material.specular", material.specular);
+	setFloat("material.shininess", material.shininess);
+
 
 }
 

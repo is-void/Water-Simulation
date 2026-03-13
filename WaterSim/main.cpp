@@ -188,6 +188,17 @@ int main()
 	unsigned int waterProjectionMatrixLoc = glGetUniformLocation(waterObj.shader->ID, "projection");
 	
 	
+	waterObj.shader->use();
+	waterObj.shader->setVec3("lightColor", glm::vec3(1.0f));
+	waterObj.shader->setVec3("lightDir", glm::vec3(-0.2f, -1.0f, -0.3f));
+
+	Shader::Material waterMat;
+	waterMat.ambient = glm::vec3(0.0f, 0.1f, 0.2f);
+	waterMat.diffuse = glm::vec3(0.0f, 0.5f, 1.0f);
+	waterMat.specular = glm::vec3(0.5f);
+	waterMat.shininess = 64.0f;
+
+	waterObj.shader->setMaterial("material", waterMat);
 
 	glEnable(GL_DEPTH_TEST);
 
@@ -195,7 +206,7 @@ int main()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+	glCullFace(GL_FRONT);
 	glFrontFace(GL_CCW);
 
 	glPatchParameteri(GL_PATCH_VERTICES, 4);
@@ -241,7 +252,7 @@ int main()
 		//Water
 		
 		waterObj.shader->setMat4("model", waterObj.transform->GetModelMatrix());
-		waterObj.shader->SetVec3("camPos", camera.Position);
+		waterObj.shader->setVec3("camPos", camera.Position);
 		glDrawElements(GL_PATCHES, waterObj.indices.size(), GL_UNSIGNED_INT, 0);
 
 
