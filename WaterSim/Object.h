@@ -16,4 +16,5 @@ class Object
 		Object(glm::vec3 position, const char* vertSource, const char* fragSource, const char* tcsSource, const char* tesSource);
 		virtual void render(Camera* camera, glm::mat4 projection, glm::mat4 view){}
 
+
 };

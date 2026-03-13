@@ -142,6 +142,7 @@
     <ClCompile Include="glad.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Object.cpp" />
+    <ClCompile Include="Plane.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="SurfaceWater.cpp" />
     <ClCompile Include="Transform.cpp" />
@@ -159,6 +160,8 @@
   <ItemGroup>
     <None Include="..\..\..\OpenGLPractice1\OpenGLPractice1\Shaders\shader.fgs" />
     <None Include="..\..\..\OpenGLPractice1\OpenGLPractice1\Shaders\shader.vts" />
+    <None Include="Shaders\skybox.fgs" />
+    <None Include="Shaders\skybox.vts" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\..\..\Downloads\09_1.png" />

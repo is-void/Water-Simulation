@@ -39,6 +39,9 @@
     <ClCompile Include="SurfaceWater.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Plane.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SurfaceWater.h">
@@ -73,6 +76,8 @@
     <None Include="..\..\..\OpenGLPractice1\OpenGLPractice1\Shaders\shader.vts">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="Shaders\skybox.vts" />
+    <None Include="Shaders\skybox.fgs" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\..\..\Downloads\09_1.png">
