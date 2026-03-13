@@ -263,6 +263,7 @@ int main()
 	unsigned int cubemapTexture = loadCubeMap(faces);
 	skyboxShader.use();
 	skyboxShader.setInt("skybox", 0);
+	waterObj.shader->setInt("skybox", 0);
 
 
 	glEnable(GL_DEPTH_TEST);
