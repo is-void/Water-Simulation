@@ -17,6 +17,7 @@ float getWaterHeightFromTexture();
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+
 uniform float Time;
 uniform sampler2D waterMap;
 

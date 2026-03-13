@@ -81,3 +81,13 @@ float* SurfaceWater::GenerateVerticies()
     return vertices;
 
 }
+
+void SurfaceWater::render(Camera* camera, glm::mat4 projection, glm::mat4 view)
+{
+    shader->use();
+    shader->setMat4("view", view);
+    shader->setMat4("projection", projection);
+    shader->setMat4("model", transform->GetModelMatrix());
+    shader->setVec3("camPos", camera->Position);
+    glDrawElements(GL_PATCHES, indices.size(), GL_UNSIGNED_INT, 0);
+}

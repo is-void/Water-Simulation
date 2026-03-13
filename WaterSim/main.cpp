@@ -181,11 +181,6 @@ int main()
 	glUniformBlockBinding(waterObj.shader->ID, blockIndex, 0);
 
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, splashUBO);
-
-
-	unsigned int waterModelMatrixLoc = glGetUniformLocation(waterObj.shader->ID, "model");
-	unsigned int waterViewMatrixLoc = glGetUniformLocation(waterObj.shader->ID, "view");
-	unsigned int waterProjectionMatrixLoc = glGetUniformLocation(waterObj.shader->ID, "projection");
 	
 	
 	waterObj.shader->use();
@@ -225,13 +220,6 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-		/*
-		//Model Matrix: Scaling/Rotating/Transforming
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-		*/
-
-
 		//View Matrix/Camera
 		glm::mat4 view = camera.GetViewMatrix();
 
@@ -239,21 +227,11 @@ int main()
 		//Projection Matrix
 		glm::mat4 projection;
 		projection = glm::perspective(glm::radians(camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
-
-
-		
-		
-		waterObj.shader->use();
-		glUniformMatrix4fv(waterViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(waterProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(projection));
-		glBindVertexArray(VAO);
 		
 
 		//Water
-		
-		waterObj.shader->setMat4("model", waterObj.transform->GetModelMatrix());
-		waterObj.shader->setVec3("camPos", camera.Position);
-		glDrawElements(GL_PATCHES, waterObj.indices.size(), GL_UNSIGNED_INT, 0);
+		glBindVertexArray(VAO);
+		waterObj.render(&camera, projection, view);
 
 
 		//check and call events, swap buffers

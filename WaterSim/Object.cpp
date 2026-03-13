@@ -12,3 +12,6 @@ Object::Object(glm::vec3 position, const char* vertSource, const char* fragSourc
 	shader = new Shader(vertSource, fragSource, tcsSource, tesSource);
 	transform = new Transform(position, glm::vec3(0.0f), glm::vec3(1));
 }
+
+
+
