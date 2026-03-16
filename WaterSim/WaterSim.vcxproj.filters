@@ -78,6 +78,8 @@
     </None>
     <None Include="Shaders\skybox.vts" />
     <None Include="Shaders\skybox.fgs" />
+    <None Include="Shaders\plane.vts" />
+    <None Include="Shaders\plane.fgs" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\..\..\Downloads\09_1.png">

@@ -3,7 +3,17 @@
 
 int width, depth;
 float step;
-Plane::Plane(glm::vec3 position, glm::vec<2, int> dimensions, int detail) : Object(position, "./Shaders/water.vts", "./Shaders/water.fgs", "./Shaders/water.tcs", "./Shaders/water.tes")
+Plane::Plane(const char* vertexShader, const char* tessShader, const char* fragShader, glm::vec3 position, glm::vec<2, int> dimensions, int detail) : Object(position, vertexShader, fragShader, "./Shaders/LOD.tcs", tessShader)
+{
+    init(position, dimensions, detail);
+}
+
+Plane::Plane(const char* vertexShader, const char* fragShader, glm::vec3 position, glm::vec<2, int> dimensions, int detail) : Object(position, vertexShader, fragShader)
+{
+    init(position, dimensions, detail);
+}
+
+void Plane::init(glm::vec3 position, glm::vec<2, int> dimensions, int detail) 
 {
     width = dimensions.x * detail;   // number of quads in X
     depth = dimensions.y * detail;   // number of quads in Z

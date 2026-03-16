@@ -160,6 +160,8 @@
   <ItemGroup>
     <None Include="..\..\..\OpenGLPractice1\OpenGLPractice1\Shaders\shader.fgs" />
     <None Include="..\..\..\OpenGLPractice1\OpenGLPractice1\Shaders\shader.vts" />
+    <None Include="Shaders\plane.fgs" />
+    <None Include="Shaders\plane.vts" />
     <None Include="Shaders\skybox.fgs" />
     <None Include="Shaders\skybox.vts" />
   </ItemGroup>
