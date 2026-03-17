@@ -31,13 +31,16 @@ struct Splash {
 
 unsigned const int MAX_WATER_SPLASHES = 5;
 
-unsigned int VAO;
-unsigned int VBO;
-unsigned int EBO;
-unsigned int splashUBO;
-unsigned int waterMap;
+namespace {
 
-CircularBuffer<Splash> waterSources(MAX_WATER_SPLASHES);
+    unsigned int VAO;
+    unsigned int VBO;
+    unsigned int EBO;
+    unsigned int splashUBO;
+    unsigned int waterMap;
+
+    CircularBuffer<Splash> waterSources(MAX_WATER_SPLASHES);
+}
 
 
 
@@ -127,8 +130,6 @@ float* SurfaceWater::GenerateVerticies()
 void SurfaceWater::prepare()
 {
 
-    //Water
-
     //HeightMap
     glGenTextures(1, &waterMap);
     glActiveTexture(GL_TEXTURE0);
@@ -171,6 +172,7 @@ void SurfaceWater::prepare()
     glBindTexture(GL_TEXTURE_2D, waterMap);
 
 
+    //Verticies
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
@@ -190,7 +192,8 @@ void SurfaceWater::prepare()
 
     glBindVertexArray(0);
 
-    
+    //Splashes
+
     glGenBuffers(1, &splashUBO);
 
     glBindBuffer(GL_UNIFORM_BUFFER, splashUBO);
@@ -202,7 +205,7 @@ void SurfaceWater::prepare()
 
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, splashUBO);
 
-
+    //Lighting
     shader->use();
     shader->setVec3("lightColor", glm::vec3(1.0f));
     shader->setVec3("lightDir", glm::vec3(-0.2f, -1.0f, -0.3f));

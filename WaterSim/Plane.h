@@ -12,6 +12,8 @@ class Plane : public Object
 		void init(glm::vec3 position, glm::vec<2, int> dimensions, int detail);
 		float* GenerateVerticies();
 		void render(Camera* camera, glm::mat4 projection, glm::mat4 view) override;
+		void loadTexture(std::string path, unsigned int index, unsigned int* location);
+		void prepare() override;
 
 
 };

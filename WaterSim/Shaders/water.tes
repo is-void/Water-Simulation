@@ -2,7 +2,7 @@
 
 
 float PI = 3.141592653589;
-float amplitude = 0.2;
+float amplitude = 0.3;
 float speed = 0.5;
 vec4 pos;
 
@@ -105,8 +105,8 @@ float getWaterHeightFromTexture()
     float u = pos.x;
     float v = pos.z;
 
-    float swell = texture(waterMap, waterDir * speed + vec2(u + Time, v + Time)).r;
-    float heave = texture(waterMap, vec2(-v - Time/2.0, -u - Time/3.0)).r;
+    float swell = texture(waterMap, waterDir * speed + vec2(u + Time*0.01, v + Time * 0.01)).r;
+    float heave = texture(waterMap, vec2(-v - Time * 0.01, -u - Time * 0.01)).r;
 
     return (swell + heave) * speed;
 }

@@ -23,6 +23,7 @@ public:
 		glm::vec3 diffuse;
 		glm::vec3 specular;
 		float shininess;
+		Material() : ambient(1.0), diffuse(1.0), specular(1.0), shininess(0.0) {}
 	};
 
 	void use();

@@ -15,7 +15,7 @@
 
 
 
-
+Shader createSkybox(SurfaceWater waterObj);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window, SurfaceWater* water);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -40,7 +40,8 @@ float fov = 45.0f;
 float lastMouseX = SCREEN_WIDTH / 2.0f;
 float lastMouseY = SCREEN_HEIGHT / 2.0f;
 
-
+unsigned int skyboxVAO, skyboxVBO;
+unsigned int cubemapTexture;
 
 
 
@@ -74,9 +75,86 @@ int main()
 
 	SurfaceWater waterObj = SurfaceWater(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(50, 50), 1);
 	Plane tilePlane = Plane("./Shaders/plane.vts", "./Shaders/plane.fgs", glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(50, 50), 1);
-	
 	waterObj.prepare();
+	tilePlane.prepare();
 
+	Shader skyboxShader = createSkybox(waterObj);
+
+
+	glEnable(GL_DEPTH_TEST);
+
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+	glFrontFace(GL_CCW);
+
+	glPatchParameteri(GL_PATCH_VERTICES, 4);
+	
+	
+
+	while (!glfwWindowShouldClose(window))
+	{
+
+		//input
+		processInput(window, &waterObj);
+
+		//rendering
+		glClearColor(0.2f, 0.3f, 0.2f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+		//View Matrix/Camera
+		glm::mat4 view = camera.GetViewMatrix();
+
+
+		//Projection Matrix
+		glm::mat4 projection;
+		projection = glm::perspective(glm::radians(camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+		
+
+
+		//Water
+		waterObj.render(&camera, projection, view);
+		tilePlane.render(&camera, projection, view);
+		//Skybox
+		glDisable(GL_CULL_FACE);
+		glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+		skyboxShader.use();
+		view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
+		skyboxShader.setMat4("view", view);
+		skyboxShader.setMat4("projection", projection);
+		
+
+		// skybox cube
+		glBindVertexArray(skyboxVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glBindVertexArray(0);
+		glDepthFunc(GL_LESS);
+		glEnable(GL_CULL_FACE);
+
+		//check and call events, swap buffers
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+
+		waterObj.sendData();
+
+		float currentTime = glfwGetTime();
+		deltaTime = currentTime - lastTime;
+		lastTime = currentTime;
+
+	}
+	glfwTerminate();
+	return 0;
+}
+
+
+Shader createSkybox(SurfaceWater waterObj)
+{
 	std::vector<std::string> faces = {
 		"./Resources/Textures/Skybox/right.png",
 		"./Resources/Textures/Skybox/left.png",
@@ -132,7 +210,6 @@ int main()
 
 
 	Shader skyboxShader("./Shaders/skybox.vts", "./Shaders/skybox.fgs");
-	unsigned int skyboxVAO, skyboxVBO;
 	glGenVertexArrays(1, &skyboxVAO);
 	glGenBuffers(1, &skyboxVBO);
 	glBindVertexArray(skyboxVAO);
@@ -140,83 +217,12 @@ int main()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	unsigned int cubemapTexture = loadCubeMap(faces);
+	cubemapTexture = loadCubeMap(faces);
 	skyboxShader.use();
 	skyboxShader.setInt("skybox", 0);
 	waterObj.shader->setInt("skybox", 0);
-
-
-	glEnable(GL_DEPTH_TEST);
-
-
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
-	glFrontFace(GL_CCW);
-
-	glPatchParameteri(GL_PATCH_VERTICES, 4);
-	
-	
-
-	while (!glfwWindowShouldClose(window))
-	{
-
-		//input
-		processInput(window, &waterObj);
-
-		//rendering
-		glClearColor(0.2f, 0.3f, 0.2f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-		//View Matrix/Camera
-		glm::mat4 view = camera.GetViewMatrix();
-
-
-		//Projection Matrix
-		glm::mat4 projection;
-		projection = glm::perspective(glm::radians(camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
-		
-
-
-		//Water
-		waterObj.render(&camera, projection, view);
-
-		//Skybox
-		glDisable(GL_CULL_FACE);
-		glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
-		skyboxShader.use();
-		view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
-		skyboxShader.setMat4("view", view);
-		skyboxShader.setMat4("projection", projection);
-		
-
-		// skybox cube
-		glBindVertexArray(skyboxVAO);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		glBindVertexArray(0);
-		glDepthFunc(GL_LESS);
-		glEnable(GL_CULL_FACE);
-
-		//check and call events, swap buffers
-		glfwSwapBuffers(window);
-		glfwPollEvents();
-
-		waterObj.sendData();
-
-		float currentTime = glfwGetTime();
-		deltaTime = currentTime - lastTime;
-		lastTime = currentTime;
-
-	}
-	glfwTerminate();
-	return 0;
+	return skyboxShader;
 }
-
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
