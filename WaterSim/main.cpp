@@ -74,7 +74,7 @@ int main()
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	SurfaceWater waterObj = SurfaceWater(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(50, 50), 1);
-	Plane tilePlane = Plane("./Shaders/plane.vts", "./Shaders/plane.fgs", glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(50, 50), 1);
+	Plane tilePlane = Plane("./Shaders/plane.vts", "./Shaders/plane.tes", "./Shaders/plane.fgs", glm::vec3(0.0f, -0.2f, 0.0f), glm::vec2(50, 50), 1);
 	waterObj.prepare();
 	tilePlane.prepare();
 
@@ -116,9 +116,16 @@ int main()
 		
 
 
+		
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glEnable(GL_CULL_FACE);
 		//Water
 		waterObj.render(&camera, projection, view);
+
+		//Plane
 		tilePlane.render(&camera, projection, view);
+
+
 		//Skybox
 		glDisable(GL_CULL_FACE);
 		glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content

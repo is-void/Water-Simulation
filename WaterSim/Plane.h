@@ -14,6 +14,7 @@ class Plane : public Object
 		void render(Camera* camera, glm::mat4 projection, glm::mat4 view) override;
 		void loadTexture(std::string path, unsigned int index, unsigned int* location);
 		void prepare() override;
+		void sendData() override;
 
 
 };

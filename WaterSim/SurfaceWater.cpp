@@ -166,8 +166,8 @@ void SurfaceWater::prepare()
     }
     stbi_image_free(data);
 
-    Object::shader->use();
-    Object::shader->setInt("waterMap", 0);
+    shader->use();
+    shader->setInt("waterMap", 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, waterMap);
 
@@ -217,10 +217,17 @@ void SurfaceWater::prepare()
     waterMat.shininess = 64.0f;
 
     shader->setMaterial("material", waterMat);
+
+    //Framebuffers for water
+    //reflectionBuffer = createFrameBuffer();
+    //refractionBuffer = createFrameBuffer();
 }
 
 void SurfaceWater::render(Camera* camera, glm::mat4 projection, glm::mat4 view)
 {
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, waterMap);
+
     glBindVertexArray(VAO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     shader->use();
@@ -253,3 +260,12 @@ void SurfaceWater::sendData()
     shader->setFloat("Time", (float)glfwGetTime());
     sendSplashData();
 }
+int createFrameBuffer()
+{
+    unsigned int fb;
+    glGenFramebuffers(1, &fb);
+    glBindFramebuffer(GL_FRAMEBUFFER, fb);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+    return fb;
+}
+

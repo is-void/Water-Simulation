@@ -3,7 +3,7 @@
 
 float PI = 3.141592653589;
 float amplitude = 0.3;
-float speed = 0.5;
+float speed = 5;
 vec4 pos;
 
 layout (quads, fractional_odd_spacing, ccw) in;
@@ -100,13 +100,13 @@ void calculatePatchPos()
 }
 float getWaterHeightFromTexture()
 {
-	vec2 waterDir = vec2(0.1, 0.1);
+	vec2 waterDir = vec2(0.1, 0.1) * speed;
 	float speed = 0.1;
     float u = pos.x;
     float v = pos.z;
 
-    float swell = texture(waterMap, waterDir * speed + vec2(u + Time*0.01, v + Time * 0.01)).r;
-    float heave = texture(waterMap, vec2(-v - Time * 0.01, -u - Time * 0.01)).r;
+    float swell = texture(waterMap, waterDir + vec2(u + Time*0.01, v + Time * 0.01)).r;
+    float heave = texture(waterMap, vec2(-v - Time * speed * 0.01, -u - Time * 0.01)).r;
 
     return (swell + heave) * speed;
 }

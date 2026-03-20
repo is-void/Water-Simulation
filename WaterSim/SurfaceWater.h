@@ -13,7 +13,9 @@ class SurfaceWater : public Object
 	
 	float maxVarience = 1.0f;
 	float stiffness = 0.1f;
-	
+	int reflectionBuffer;
+	int refractionBuffer;
+
 	public:
 		unsigned int vertexCount;
 		const unsigned int MAX_WATER_SPLASHES = 5;

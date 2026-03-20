@@ -61,7 +61,11 @@ void Plane::init(glm::vec3 position, glm::vec<2, int> dimensions, int detail)
     
     GenerateVerticies();
 
-
+    float* verts = GenerateVerticies();
+    for (int i = 0; i < 20; ++i) {
+        std::cout << "v" << i << ": "
+            << verts[i * 3] << ", " << verts[i * 3 + 1] << ", " << verts[i * 3 + 2] << std::endl;
+    }
 }
 
 float* Plane::GenerateVerticies()
@@ -75,7 +79,7 @@ float* Plane::GenerateVerticies()
     {
         return vertices;
     }
-    vertexCount = verticesPerRow * verticesPerCol * 3;
+    vertexCount = verticesPerRow * verticesPerCol;
     vertices = new float[verticesPerRow * verticesPerCol * 3];
 
     int k = 0;
@@ -91,9 +95,9 @@ float* Plane::GenerateVerticies()
             vertices[k * 3] = transform->position.x - halfWidth + xPos;
             vertices[k * 3 + 1] = transform->position.y;
             vertices[k * 3 + 2] = transform->position.z - halfDepth + zPos;
-           
+            k++;
         }
-        k++;
+       
     }
 
     return vertices;
@@ -147,10 +151,10 @@ void Plane::prepare()
     loadTexture("./Resources/Textures/Tiles/FloorTiles/specular.png", 2, &tileSpecular);
     
     //Shaders
-    Object::shader->use();
-    Object::shader->setInt("diffuseMap", 0);
-    Object::shader->setInt("normalMap", 1);
-    Object::shader->setInt("specularMap", 2);
+    shader->use();
+    shader->setInt("diffuseMap", 0);
+    shader->setInt("normalMap", 1);
+    shader->setInt("specularMap", 2);
 
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -176,6 +180,13 @@ void Plane::prepare()
 
 void Plane::render(Camera* camera, glm::mat4 projection, glm::mat4 view)
 {
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, tileDiffuse);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, tileNormal);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, tileSpecular);
+
     glBindVertexArray(VAO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     shader->use();
@@ -185,4 +196,9 @@ void Plane::render(Camera* camera, glm::mat4 projection, glm::mat4 view)
     shader->setVec3("camPos", camera->Position);
 
     glDrawElements(GL_PATCHES, indices.size(), GL_UNSIGNED_INT, 0);
+}
+
+void Plane::sendData()
+{
+    shader->use();
 }

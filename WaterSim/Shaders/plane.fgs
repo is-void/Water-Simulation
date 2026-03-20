@@ -1,7 +1,13 @@
 #version 460 core
+
+in vec3 FragPos;
 out vec4 FragColor;
+
+uniform sampler2D diffuseMap;
+uniform sampler2D normalMap;
+uniform sampler2D specularMap;
 
 void main()
 {    
-    FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+    FragColor = texture(diffuseMap, FragPos.xz);
 }
