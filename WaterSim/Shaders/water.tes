@@ -96,7 +96,6 @@ void calculatePatchPos()
     vec4 vVec = p10 - p00;
 
 
-
 }
 float getWaterHeightFromTexture()
 {

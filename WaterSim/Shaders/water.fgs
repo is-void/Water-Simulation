@@ -14,9 +14,11 @@ out vec4 FragColor;
 uniform vec3 camPos;
 uniform vec3 lightDir;
 uniform vec3 lightColor;
-uniform samplerCube skybox;
+
+uniform mat4 model;
 
 uniform Material material;
+uniform samplerCube envMap;
 
 float calculateTransparency();
 vec3 calculateLighting(float frensel);
@@ -27,7 +29,7 @@ void main()
 {
     vec3 dx = dFdx(FragPos);
     vec3 dy = dFdy(FragPos);
-    normal = normalize(cross(dx, dy));
+    normal = (model * vec4(normalize(cross(dx, dy)), 0.0)).xyz;
     vec3 color = calculateLighting(calculateTransparency());
 	FragColor = vec4(color.x, color.y, color.z, 1.0);
 }
@@ -64,13 +66,13 @@ vec3 calculateLighting(float frensel)
         
     vec3 result = ambient + diffuse + specular;
 
-    vec3 I = FragPos - camPos;
+    vec3 I = (FragPos - camPos);
     vec3 reflectVec = reflect(I, normal);
     vec3 refractVec = refract(I, normal, 1.33);
-    vec3 reflectColor = texture(skybox, reflectVec).rgb;
-    vec3 refractColor = texture(skybox, refractVec).rgb;
+    vec3 reflectColor = texture(envMap, reflectVec).rgb;
+    vec3 refractColor = texture(envMap, refractVec).rgb;
 
 
+    return mix(reflectColor, refractColor, frensel);
 
-    return mix(mix(refractColor, result, frensel), reflectColor, frensel);
 }

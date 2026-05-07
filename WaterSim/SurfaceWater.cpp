@@ -78,8 +78,8 @@ SurfaceWater::SurfaceWater(glm::vec3 position, glm::vec<2, int> dimensions, int 
             unsigned int bottomRight = bottomLeft + 1;
 
             indices.push_back(topLeft);
-            indices.push_back(topRight);
             indices.push_back(bottomLeft);
+            indices.push_back(topRight);
             indices.push_back(bottomRight);
         }
     }
@@ -117,7 +117,7 @@ float* SurfaceWater::GenerateVerticies()
     
     for (int i = 0; i < vertexCount; i++)
     {
-        glm::vec3 loc = transform->position + points[i].positionOffset + points[i].heightDisplacement;
+        glm::vec3 loc = transform->position + points[i].positionOffset;
         
         vertices[i * 3] = loc.x;
         vertices[i * 3 + 1] = loc.y;

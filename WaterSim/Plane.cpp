@@ -51,8 +51,8 @@ void Plane::init(glm::vec3 position, glm::vec<2, int> dimensions, int detail)
             unsigned int bottomRight = bottomLeft + 1;
 
             indices.push_back(topLeft);
-            indices.push_back(topRight);
             indices.push_back(bottomLeft);
+            indices.push_back(topRight);
             indices.push_back(bottomRight);
         }
     }

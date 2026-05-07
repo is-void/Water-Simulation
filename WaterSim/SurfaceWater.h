@@ -8,7 +8,6 @@ class SurfaceWater : public Object
 	struct Point {
 		glm::vec3 positionOffset = glm::vec3(0.0f);
 		float initialHeight = 0;
-		float heightDisplacement = 0;
 	};
 	
 	float maxVarience = 1.0f;
