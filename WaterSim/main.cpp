@@ -136,7 +136,7 @@ int main()
 
 		//Projection Matrix
 		glm::mat4 projection;
-		projection = glm::perspective(glm::radians(camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+		projection = glm::perspective(glm::radians(camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.05f, 100.0f);
 		
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glEnable(GL_CULL_FACE);
@@ -182,8 +182,10 @@ int main()
 }
 
 void updateDynamicReflection(SurfaceWater* waterObj, Shader* skyboxShader, Plane& tilePlane, unsigned int skyboxVAO, unsigned int dynamicCube, unsigned int cubeFBO) {
-	glm::mat4 proj = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 100.0f);
-	glm::vec3 reflectionCenter = waterObj->transform->position;
+	glm::mat4 proj = glm::perspective(glm::radians(90.0f), 1.0f, 0.05f, 100.0f);
+	glm::vec3 reflectionCenter = glm::vec3(camera.Position.x,
+		camera.Position.y, 
+		camera.Position.z);
 
 	std::vector<glm::mat4> views = {
 		glm::lookAt(reflectionCenter, reflectionCenter + glm::vec3(1,  0,  0), glm::vec3(0, -1,  0)), // +X
@@ -194,7 +196,7 @@ void updateDynamicReflection(SurfaceWater* waterObj, Shader* skyboxShader, Plane
 		glm::lookAt(reflectionCenter, reflectionCenter + glm::vec3(0,  0, -1), glm::vec3(0, -1,  0))  // -Z
 	};
 
-	// Save viewport
+
 	GLint oldViewport[4];
 	glGetIntegerv(GL_VIEWPORT, oldViewport);
 
@@ -204,7 +206,6 @@ void updateDynamicReflection(SurfaceWater* waterObj, Shader* skyboxShader, Plane
 	glClearColor(0.2f, 0.3f, 0.2f, 1.0f);
 
 	for (int i = 0; i < 6; ++i) {
-		// Attach cubemap face
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
 			GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, dynamicCube, 0);
 
@@ -213,10 +214,9 @@ void updateDynamicReflection(SurfaceWater* waterObj, Shader* skyboxShader, Plane
 			continue;
 		}
 
-		// CLEAR FIRST (before rendering)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Render skybox
+		
 		glDisable(GL_CULL_FACE);
 		glDepthFunc(GL_LEQUAL);
 		
@@ -231,12 +231,12 @@ void updateDynamicReflection(SurfaceWater* waterObj, Shader* skyboxShader, Plane
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		glBindVertexArray(0);
 
-		// Render plane
 		glEnable(GL_CULL_FACE);
 		glDepthFunc(GL_LESS);
 		
 		Camera reflectionCamera = camera;
 		reflectionCamera.Position = reflectionCenter;
+
 		tilePlane.render(&reflectionCamera, proj, views[i]);
 		waterObj->render(&reflectionCamera, proj, views[i]);
 

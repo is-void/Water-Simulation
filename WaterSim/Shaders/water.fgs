@@ -23,6 +23,7 @@ uniform samplerCube envMap;
 float calculateTransparency();
 vec3 calculateLighting(float frensel);
 
+vec3 viewDir;
 vec3 normal;
 
 void main()
@@ -30,18 +31,19 @@ void main()
     vec3 dx = dFdx(FragPos);
     vec3 dy = dFdy(FragPos);
     normal = (model * vec4(normalize(cross(dx, dy)), 0.0)).xyz;
+    viewDir = normalize(camPos - FragPos);
+
     vec3 color = calculateLighting(calculateTransparency());
 	FragColor = vec4(color.x, color.y, color.z, 1.0);
 }
 
 float calculateTransparency()
 {
-    vec3 V = normalize(camPos - FragPos);
 
     vec3 viewDir = normalize(camPos - FragPos);
 
     float r0 = 0.02;
-    float dotProd = clamp(dot(normal, V), 0.0, 1.0);
+    float dotProd = clamp(dot(normal, viewDir), 0.0, 1.0);
    
 
     float reflect = r0 + (1  - r0) * pow(1 - dotProd, 5);
@@ -59,7 +61,6 @@ vec3 calculateLighting(float frensel)
     vec3 diffuse = lightColor * (diff * material.diffuse);
     
     // specular
-    vec3 viewDir = normalize(camPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, normal);  
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     vec3 specular = lightColor * (spec * material.specular);  
@@ -67,12 +68,12 @@ vec3 calculateLighting(float frensel)
     vec3 result = ambient + diffuse + specular;
 
     vec3 I = (FragPos - camPos);
-    vec3 reflectVec = reflect(I, normal);
-    vec3 refractVec = refract(I, normal, 1.33);
+    vec3 reflectVec = normalize(reflect(I, normal));
+    vec3 refractVec = normalize(refract(I, normal, 1.33));
     vec3 reflectColor = texture(envMap, reflectVec).rgb;
     vec3 refractColor = texture(envMap, refractVec).rgb;
 
 
-    return mix(reflectColor, refractColor, frensel);
+    return mix(refractColor, reflectColor, frensel);
 
 }
