@@ -18,11 +18,12 @@ uniform vec3 lightColor;
 uniform mat4 model;
 
 uniform Material material;
-uniform samplerCube envMap;
+uniform samplerCube reflectionMap;
+uniform samplerCube refractionMap;
 
 float calculateTransparency();
 vec3 calculateLighting(float frensel);
-
+float distortionIntensity = 0.05;
 vec3 viewDir;
 vec3 normal;
 
@@ -30,7 +31,8 @@ void main()
 {
     vec3 dx = dFdx(FragPos);
     vec3 dy = dFdy(FragPos);
-    normal = (model * vec4(normalize(cross(dx, dy)), 0.0)).xyz;
+    mat3 normalMatrix = transpose(inverse(mat3(model)));
+    normal = normalize(normalMatrix * normalize(cross(dx, dy)));
     viewDir = normalize(camPos - FragPos);
 
     vec3 color = calculateLighting(calculateTransparency());
@@ -40,15 +42,13 @@ void main()
 float calculateTransparency()
 {
 
-    vec3 viewDir = normalize(camPos - FragPos);
-
     float r0 = 0.02;
     float dotProd = clamp(dot(normal, viewDir), 0.0, 1.0);
    
 
-    float reflect = r0 + (1  - r0) * pow(1 - dotProd, 5);
+    float frensel = r0 + (1  - r0) * pow(1 - dotProd, 5);
 
-    float transparency = clamp(reflect, 0.1, 0.9);
+    float transparency = clamp(frensel, 0.1, 0.9);
     return transparency;
 }
 
@@ -67,13 +67,16 @@ vec3 calculateLighting(float frensel)
         
     vec3 result = ambient + diffuse + specular;
 
-    vec3 I = (FragPos - camPos);
-    vec3 reflectVec = normalize(reflect(I, normal));
-    vec3 refractVec = normalize(refract(I, normal, 1.33));
-    vec3 reflectColor = texture(envMap, reflectVec).rgb;
-    vec3 refractColor = texture(envMap, refractVec).rgb;
+    vec3 up = vec3(0.0, 1.0, 0.0);
+    vec3 mutedNormal = mix(normal, up, distortionIntensity);
+    vec3 I = normalize(FragPos - camPos);
+
+    vec3 reflectVec = reflect(I, normal);
+    vec3 refractVec = refract(I, mutedNormal, 1.0);
+    vec3 refractColor = texture(refractionMap, refractVec).rgb;
+    vec3 reflectColor = texture(reflectionMap, reflectVec).rgb;
 
 
-    return mix(refractColor, reflectColor, frensel);
+    return mix(refractColor, result+ reflectColor, frensel);
 
 }

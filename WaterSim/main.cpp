@@ -12,7 +12,7 @@
 
 Shader createSkybox(SurfaceWater waterObj);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void updateDynamicReflection(SurfaceWater* waterObj, Shader* skyboxShader, Plane& tilePlane, unsigned int skyboxVAO, unsigned int dynamicCube, unsigned int cubeFBO);
+void updateDynamicCubeMaps(SurfaceWater* waterObj, Shader* skyboxShader, Plane& tilePlane, unsigned int skyboxVAO, unsigned int reflectionCube, unsigned int refractionCube, unsigned int cubeFBO, unsigned int* depthRBOs);
 void processInput(GLFWwindow* window, SurfaceWater* water);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 unsigned int loadCubeMap(std::vector<std::string>);
@@ -36,7 +36,7 @@ float lastMouseX = SCREEN_WIDTH / 2.0f;
 float lastMouseY = SCREEN_HEIGHT / 2.0f;
 
 unsigned int skyboxVAO, skyboxVBO;
-unsigned int cubemapTexture;
+unsigned int skyboxTextures;
 
 
 
@@ -72,10 +72,20 @@ int main()
 	tilePlane.prepare();
 
 	Shader skyboxShader = createSkybox(waterObj);
-	unsigned int cubeFBO, dynamicCube, depthRBO;
+	unsigned int cubeFBO, dynamicReflectionCube, dynamicRefractionCube;
+	unsigned int depthRBOs[2];
+	glGenRenderbuffers(2, depthRBOs);
+	for (int i = 0; i < 2; ++i) {
+		glBindRenderbuffer(GL_RENDERBUFFER, depthRBOs[i]);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, REFLECTION_RES, REFLECTION_RES);
+	}
+	glGenFramebuffers(1, &cubeFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, cubeFBO);
+	// Attach reflection depth by default
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRBOs[0]);
 
-	glGenTextures(1, &dynamicCube);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, dynamicCube);
+	glGenTextures(1, &dynamicReflectionCube);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, dynamicReflectionCube);
 	for (unsigned int i = 0; i < 6; ++i) {
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, REFLECTION_RES, REFLECTION_RES, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 	}
@@ -86,15 +96,20 @@ int main()
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-	glGenFramebuffers(1, &cubeFBO);
-	glGenRenderbuffers(1, &depthRBO);
+	glGenTextures(1, &dynamicRefractionCube);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, dynamicRefractionCube);
+	for (unsigned int i = 0; i < 6; ++i) {
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, REFLECTION_RES, REFLECTION_RES, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	}
 
-	glBindFramebuffer(GL_FRAMEBUFFER, cubeFBO);
-	glBindRenderbuffer(GL_RENDERBUFFER, depthRBO);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, REFLECTION_RES, REFLECTION_RES);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRBO);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	
 
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X, dynamicCube, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X, dynamicReflectionCube, 0);
 	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -119,7 +134,7 @@ int main()
 	while (!glfwWindowShouldClose(window))
 	{
 		//Reflections
-		updateDynamicReflection(&waterObj, &skyboxShader, tilePlane, skyboxVAO, dynamicCube, cubeFBO);
+		updateDynamicCubeMaps(&waterObj, &skyboxShader, tilePlane, skyboxVAO, dynamicReflectionCube, dynamicRefractionCube, cubeFBO, depthRBOs);
 
 
 
@@ -143,8 +158,14 @@ int main()
 		
 		//Water
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, dynamicCube);
-		waterObj.shader->setInt("envMap", 1);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, dynamicReflectionCube);
+		waterObj.shader->use();
+		waterObj.shader->setInt("reflectionMap", 1);
+
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, dynamicRefractionCube);
+		waterObj.shader->setInt("refractionMap", 2);
+
 		waterObj.render(&camera, projection, view);
 
 		//Plane
@@ -160,7 +181,7 @@ int main()
 		
 		glBindVertexArray(skyboxVAO);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextures);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		glBindVertexArray(0);
 		glDepthFunc(GL_LESS);
@@ -180,22 +201,26 @@ int main()
 	glfwTerminate();
 	return 0;
 }
+void updateDynamicCubeMaps(SurfaceWater* waterObj, Shader* skyboxShader, Plane& tilePlane, unsigned int skyboxVAO, unsigned int reflectionCube, unsigned int refractionCube, unsigned int cubeFBO, unsigned int* depthRBOs)
+{
+	glm::mat4 proj = glm::perspective(glm::radians(90.0f), 1.0f, 0.01f, 100.0f);
 
-void updateDynamicReflection(SurfaceWater* waterObj, Shader* skyboxShader, Plane& tilePlane, unsigned int skyboxVAO, unsigned int dynamicCube, unsigned int cubeFBO) {
-	glm::mat4 proj = glm::perspective(glm::radians(90.0f), 1.0f, 0.05f, 100.0f);
-	glm::vec3 reflectionCenter = glm::vec3(camera.Position.x,
-		camera.Position.y, 
-		camera.Position.z);
+	glm::vec3 reflectionCenter = glm::vec3(camera.Position.x, camera.Position.y, camera.Position.z);
+	glm::vec3 refractionCenter = glm::vec3(camera.Position.x, camera.Position.y, camera.Position.z);
 
-	std::vector<glm::mat4> views = {
-		glm::lookAt(reflectionCenter, reflectionCenter + glm::vec3(1,  0,  0), glm::vec3(0, -1,  0)), // +X
-		glm::lookAt(reflectionCenter, reflectionCenter + glm::vec3(-1,  0,  0), glm::vec3(0, -1,  0)), // -X
-		glm::lookAt(reflectionCenter, reflectionCenter + glm::vec3(0,  1,  0), glm::vec3(0,  0,  1)), // +Y
-		glm::lookAt(reflectionCenter, reflectionCenter + glm::vec3(0, -1,  0), glm::vec3(0,  0, -1)), // -Y
-		glm::lookAt(reflectionCenter, reflectionCenter + glm::vec3(0,  0,  1), glm::vec3(0, -1,  0)), // +Z
-		glm::lookAt(reflectionCenter, reflectionCenter + glm::vec3(0,  0, -1), glm::vec3(0, -1,  0))  // -Z
-	};
+	auto makeViews = [](glm::vec3 center) {
+		return std::vector<glm::mat4>{
+				glm::lookAt(center, center + glm::vec3(1, 0, 0), glm::vec3(0, -1, 0)),
+				glm::lookAt(center, center + glm::vec3(-1, 0, 0), glm::vec3(0, -1, 0)),
+				glm::lookAt(center, center + glm::vec3(0, 1, 0), glm::vec3(0, 0, 1)),
+				glm::lookAt(center, center + glm::vec3(0, -1, 0), glm::vec3(0, 0, -1)),
+				glm::lookAt(center, center + glm::vec3(0, 0, 1), glm::vec3(0, -1, 0)),
+				glm::lookAt(center, center + glm::vec3(0, 0, -1), glm::vec3(0, -1, 0)),
+		};
+		};
 
+	std::vector < glm::mat4> reflectionViews = makeViews(reflectionCenter);
+	std::vector < glm::mat4> refractionViews = makeViews(refractionCenter);
 
 	GLint oldViewport[4];
 	glGetIntegerv(GL_VIEWPORT, oldViewport);
@@ -205,44 +230,69 @@ void updateDynamicReflection(SurfaceWater* waterObj, Shader* skyboxShader, Plane
 	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 	glClearColor(0.2f, 0.3f, 0.2f, 1.0f);
 
-	for (int i = 0; i < 6; ++i) {
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-			GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, dynamicCube, 0);
+	unsigned int cubeMaps[2] = { reflectionCube, refractionCube };
 
-		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-			std::cerr << "FBO incomplete for face " << i << std::endl;
-			continue;
+	for (int cm = 0; cm < 2; ++cm)
+	{
+		// Re-attach the correct depth buffer for this cubemap
+		glBindFramebuffer(GL_FRAMEBUFFER, cubeFBO);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+			GL_RENDERBUFFER, depthRBOs[cm]);
+
+		bool isReflection = (cubeMaps[cm] == reflectionCube);
+		std::vector<glm::mat4>& views = isReflection ? reflectionViews : refractionViews;
+		glm::vec3 center = isReflection ? reflectionCenter : refractionCenter;
+
+		for (int i = 0; i < 6; ++i)
+		{
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+				GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, cubeMaps[cm], 0);
+
+			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+				std::cerr << "FBO incomplete for face " << i << std::endl;
+				continue;
+			}
+
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			Camera cam = camera;
+			cam.Position = center;
+
+			if (isReflection)
+			{
+				glDisable(GL_CULL_FACE);
+				glDepthFunc(GL_LEQUAL);
+				skyboxShader->use();
+				skyboxShader->setMat4("view", glm::mat4(glm::mat3(views[i])));
+				skyboxShader->setMat4("projection", proj);
+				glBindVertexArray(skyboxVAO);
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextures);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+				glBindVertexArray(0);
+				glEnable(GL_CULL_FACE);
+				glDepthFunc(GL_LESS);
+				waterObj->render(&cam, proj, views[i]);
+			}
+			else
+			{
+				glDisable(GL_CULL_FACE);
+				glDepthFunc(GL_LEQUAL);
+				skyboxShader->use();
+				skyboxShader->setMat4("view", glm::mat4(glm::mat3(views[i])));
+				skyboxShader->setMat4("projection", proj);
+				glBindVertexArray(skyboxVAO);
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextures);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+				glBindVertexArray(0);
+				glEnable(GL_CULL_FACE);
+				glDepthFunc(GL_LESS);
+				tilePlane.render(&cam, proj, views[i]);
+			}
 		}
-
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		
-		glDisable(GL_CULL_FACE);
-		glDepthFunc(GL_LEQUAL);
-		
-		skyboxShader->use();
-		glm::mat4 skyboxView = glm::mat4(glm::mat3(views[i]));
-		skyboxShader->setMat4("view", skyboxView);
-		skyboxShader->setMat4("projection", proj);
-
-		glBindVertexArray(skyboxVAO);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		glBindVertexArray(0);
-
-		glEnable(GL_CULL_FACE);
-		glDepthFunc(GL_LESS);
-		
-		Camera reflectionCamera = camera;
-		reflectionCamera.Position = reflectionCenter;
-
-		tilePlane.render(&reflectionCamera, proj, views[i]);
-		waterObj->render(&reflectionCamera, proj, views[i]);
-
 	}
 
-	// Restore state
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glDrawBuffer(GL_BACK);
 	glViewport(oldViewport[0], oldViewport[1], oldViewport[2], oldViewport[3]);
@@ -310,7 +360,7 @@ Shader createSkybox(SurfaceWater waterObj)
 	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	cubemapTexture = loadCubeMap(faces);
+	skyboxTextures = loadCubeMap(faces);
 	skyboxShader.use();
 	skyboxShader.setInt("skybox", 0);
 	return skyboxShader;

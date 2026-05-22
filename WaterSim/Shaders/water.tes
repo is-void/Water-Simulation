@@ -3,7 +3,7 @@
 
 float PI = 3.141592653589;
 float amplitude = 0.3;
-float speed = 5;
+float txtScrollSpeed = 10;
 vec4 pos;
 
 layout (quads, fractional_odd_spacing, ccw) in;
@@ -62,7 +62,7 @@ float calculateHeight()
 			if(dist > maxDist)
 				continue;
 			
-			float timeDiff = (Time - splashes[i].time) * speed * 4;
+			float timeDiff = (Time - splashes[i].time) * txtScrollSpeed;
 
 			float d = 8.0 * dist;
 			dis += max(((maxDist - dist)/maxDist) * splashHeight *  cos(clamp(d-a*timeDiff - splashes[i].startingRadius, -PI, PI)), 0);
@@ -99,7 +99,7 @@ void calculatePatchPos()
 }
 float getWaterHeightFromTexture()
 {
-	vec2 waterDir = vec2(0.1, 0.1) * speed;
+	vec2 waterDir = vec2(0.1, 0.1) * txtScrollSpeed;
 	float speed = 0.1;
     float u = pos.x;
     float v = pos.z;
