@@ -206,7 +206,7 @@ void updateDynamicCubeMaps(SurfaceWater* waterObj, Shader* skyboxShader, Plane& 
 	glm::mat4 proj = glm::perspective(glm::radians(90.0f), 1.0f, 0.01f, 100.0f);
 
 	glm::vec3 reflectionCenter = glm::vec3(camera.Position.x, camera.Position.y, camera.Position.z);
-	glm::vec3 refractionCenter = glm::vec3(camera.Position.x, camera.Position.y, camera.Position.z);
+	glm::vec3 refractionCenter = glm::vec3(camera.Position.x, camera.Position.y+0.5, camera.Position.z);
 
 	auto makeViews = [](glm::vec3 center) {
 		return std::vector<glm::mat4>{
